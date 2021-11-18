@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<properties>
+		<com.exigen.ewf-commons.version>7.1.1.001</com.exigen.ewf-commons.version>
+		<com.exigen.bam.version>7.1.1.001</com.exigen.bam.version>
+	</properties>
+	<parent>
+		<artifactId>base</artifactId>
+		<groupId>com.exigen</groupId>
+		<version>7.1.1.002</version>
+	</parent>
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.exigen.cm</groupId> 
+	<artifactId>jcr</artifactId>
+	<packaging>pom</packaging>
+	<version>8.0</version>
+
+	<build>
+		<plugins>
+
+			<plugin>
+				<groupId>com.exigen.maven.plugins</groupId>
+				<artifactId>mvn-utils</artifactId>
+				<version>1.0</version>
+				<executions>
+					<execution>
+						<configuration>
+							<versionReplace>
+								${versionReplace}
+							</versionReplace>
+							<versionReplaceList>
+								${versionReplaceList}
+							</versionReplaceList>
+						</configuration>
+						<goals>
+							<goal>versionChange</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+		</plugins>
+	</build>
+
+	<modules>
+ 		<module>runtime</module>
+	</modules>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.exigen.ewf-commons</groupId>
+				<artifactId>ewf-commons</artifactId>
+				<version>${com.exigen.ewf-commons.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.exigen.bam</groupId>
+				<artifactId>exigen-bam-producer</artifactId>
+				<version>${com.exigen.bam.version}</version>
+			</dependency>
+
+			 <dependency>
+	              <groupId>com.exigen.crs</groupId>
+	              <artifactId>crs-ws-client</artifactId>
+	              <version>7.1.1.002</version>
+	              
+	 			  <exclusions>
+	                    <exclusion>
+	                        <groupId>org.codehaus.woodstox</groupId>
+	                        <artifactId>woodstox-core-asl</artifactId>
+	                    </exclusion>
+	              </exclusions>              
+	      </dependency>
+
+		</dependencies>
+		
+	</dependencyManagement>
+</project>

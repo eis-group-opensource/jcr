@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.exigen.cm.jcr.runtime</groupId>
+	<artifactId>exigen-jcr-spring</artifactId>
+	<name>Exigen JCR Spring</name>
+	<parent>
+		<groupId>com.exigen.cm.jcr</groupId>
+		<artifactId>runtime</artifactId>
+		<version>8.0</version>
+	</parent>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.exigen.cm.jcr.runtime</groupId>
+			<artifactId>exigen-jcr-core</artifactId>
+			<version>8.0</version>
+		</dependency>
+	
+		<dependency>
+			<groupId>com.exigen.cm.jcr.runtime.server</groupId>
+			<artifactId>exigen-jcr-server</artifactId>
+			<version>8.0</version>
+		</dependency>
+	
+	
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+				<scope>provided</scope>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-jdbc</artifactId>
+				<scope>provided</scope>
+		</dependency>
+		
+		 <dependency>
+		         <groupId>javax.transaction</groupId>
+		         <artifactId>jta</artifactId>
+				<scope>provided</scope>
+		 </dependency>
+		
+	</dependencies>
+
+</project>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>com.exigen.cm.jcr.runtime</groupId>
+	<artifactId>exigen-jcr-standalone</artifactId>
+	<name>Exigen JCR Standalone</name>
+
+	<parent>
+		<groupId>com.exigen.cm.jcr</groupId>
+		<artifactId>runtime</artifactId>
+		<version>8.0</version>
+	</parent>
+
+
+<!--	<dependencies>
+		<dependency>
+			<groupId>jotm</groupId>
+			<artifactId>jotm</artifactId>
+ 			<exclusions>
+				<exclusion>
+					<groupId>org.objectweb.carol</groupId>
+					<artifactId>carol</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
+			<groupId>com.experlog</groupId>
+			<artifactId>xapool</artifactId>
+ 			<exclusions>
+				<exclusion>
+					<groupId>org.objectweb.carol</groupId>
+					<artifactId>carol</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+	</dependencies> -->
+</project>

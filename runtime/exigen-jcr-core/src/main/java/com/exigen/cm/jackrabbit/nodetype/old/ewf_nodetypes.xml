@@ -1,0 +1,709 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    /*
+    * Copyright (c) 2006 Exigen Properties, Inc. and/or affiliates.
+    * All Rights Reserved.
+    * $Header: /cvs/src/EPB/JCR/jcr/runtime/exigen-jcr-core/src/main/resources/com/exigen/cm/jackrabbit/nodetype/old/ewf_nodetypes.xml,v 1.3 2007/05/28 10:08:15 dparhomenko Exp $
+    */
+-->
+<!--
+    Note: The following inline DTD is included as an informal description of
+    the node type configuration file format. It can however not be used for
+    formal validation because of the namespace declarations. The DTD is therefore
+    commented out by default.
+-->
+<!-- 
+    <!DOCTYPE nodeTypes [
+    <!ELEMENT nodeTypes (nodeType)*>
+    <!ELEMENT nodeType (supertypes?|propertyDefinition*|childNodeDefinition*)>
+    
+    <!ATTLIST nodeType
+    name CDATA #REQUIRED
+    isMixin (true|false) #REQUIRED
+    hasOrderableChildNodes (true|false) #REQUIRED
+    primaryItemName CDATA #REQUIRED
+    >
+    <!ELEMENT supertypes (supertype+)>
+    <!ELEMENT supertype (CDATA)>
+    
+    <!ELEMENT propertyDefinition (valueConstraints?|defaultValues?)>
+    <!ATTLIST propertyDefinition
+    name CDATA #REQUIRED
+    requiredType (String|Date|Path|Name|Reference|Binary|Double|Long|Boolean|undefined) #REQUIRED
+    autoCreated (true|false) #REQUIRED
+    mandatory (true|false) #REQUIRED
+    onParentVersion (COPY|VERSION|INITIALIZE|COMPUTE|IGNORE|ABORT) #REQUIRED
+    protected (true|false) #REQUIRED
+    multiple  (true|false) #REQUIRED
+    >
+    <!ELEMENT valueConstraints (valueConstraint+)>
+    <!ELEMENT valueConstraint (CDATA)>
+    <!ELEMENT defaultValues (defaultValue+)>
+    <!ELEMENT defaultValue (CDATA)>
+    
+    <!ELEMENT childNodeDefinition (requiredPrimaryTypes)>
+    <!ATTLIST childNodeDefinition
+    name CDATA #REQUIRED
+    defaultPrimaryType  CDATA #REQUIRED
+    autoCreated (true|false) #REQUIRED
+    mandatory (true|false) #REQUIRED
+    onParentVersion (COPY|VERSION|INITIALIZE|COMPUTE|IGNORE|ABORT) #REQUIRED
+    protected (true|false) #REQUIRED
+    sameNameSiblings (true|false) #REQUIRED
+    >
+    <!ELEMENT requiredPrimaryTypes (requiredPrimaryType+)>
+    <!ELEMENT requiredPrimaryType (CDATA)>
+    ]>
+-->
+<nodeTypes xmlns:rep="internal" xmlns:nt="http://www.jcp.org/jcr/nt/1.0"
+    xmlns:mix="http://www.jcp.org/jcr/mix/1.0"
+    xmlns:jcr="http://www.jcp.org/jcr/1.0"
+    xmlns:sv="http://www.jcp.org/jcr/sv/1.0"
+    xmlns:test="http://www.apache.org/jackrabbit/test"
+    xmlns:ewf_nt="http://www.exigen.com/jcr/nt"
+    xmlns:ewf_mix="http://www.exigen.com/jcr/mix"
+    xmlns:ewf="http://www.exigen.com/jcr">
+
+    <!-- Exigen Workflow extensions: nodetypes to implement EWF requirements -->
+
+
+
+    <!-- 
+        mixin types
+    -->
+
+    <!-- ewf_mix:trackable	
+        A mixin type that makes a node `trackable': shows who and when created it, who and when modified it.
+    -->
+    <nodeType name="ewf_mix:trackable" isMixin="true"
+        hasOrderableChildNodes="false" primaryItemName=""
+        embeded="false" >
+        <propertyDefinition name="ewf:created" requiredType="Date"
+            autoCreated="true" mandatory="true" onParentVersion="COPY"
+            protected="true" multiple="false" />
+        <propertyDefinition name="ewf:createdBy" requiredType="String"
+            autoCreated="true" mandatory="true" onParentVersion="COPY"
+            protected="true" multiple="false" />
+        <propertyDefinition name="ewf:updated" requiredType="Date"
+            autoCreated="true" mandatory="true" onParentVersion="COPY"
+            protected="true" multiple="false" />
+        <propertyDefinition name="ewf:updatedBy" requiredType="String"
+            autoCreated="true" mandatory="true" onParentVersion="COPY"
+            protected="true" multiple="false" />
+    </nodeType>
+
+    <!-- ewf_mix:unlockable	
+        A mixin type that adds a lock time property, allows time-based unlocking.
+    -->
+    <nodeType name="ewf_mix:unlockable" isMixin="true"
+        hasOrderableChildNodes="false" primaryItemName=""
+        embeded="false" >
+        <propertyDefinition name="ewf:lockTime" requiredType="Date"
+            autoCreated="false" mandatory="false" onParentVersion="COPY"
+            protected="true" multiple="false" indexable="true"/>
+    </nodeType>
+
+    <!-- TODO: ewf_mix:archivable	
+        A mixin type that adds life-cycle and retention specific properties.
+    -->
+
+
+    <!-- ewf_nt:hierarchyNode
+        The generic type for creating specific business folder and document types.
+    -->
+    <nodeType name="ewf_nt:hierarchyNode" isMixin="false"
+        hasOrderableChildNodes="false" primaryItemName=""
+        embeded="false">
+        <supertypes>
+            <supertype>nt:base</supertype>
+            <supertype>mix:referenceable</supertype>
+            <supertype>ewf_mix:trackable</supertype>
+        </supertypes>
+    </nodeType>
+
+
+    <!-- ewf_nt:folder	
+        A node type that should be used as a base for custom folder creation.
+    -->
+    <nodeType name="ewf_nt:folder" isMixin="false"
+        hasOrderableChildNodes="false"
+        embeded="false">
+        <supertypes>
+            <supertype>ewf_nt:hierarchyNode</supertype>
+        </supertypes>
+        <childNodeDefinition name="*" defaultPrimaryType="ewf_nt:hierarchyNode"
+            autoCreated="false" mandatory="false" onParentVersion="COPY"
+            protected="false" sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>ewf_nt:hierarchyNode</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+    </nodeType>
+
+    <!-- ewf_nt:document	
+        A node type that should be used as a base for custom document creation. 
+        If a document does not add any properties, can be used as-is.
+    -->
+    <nodeType name="ewf_nt:document" isMixin="false"
+        hasOrderableChildNodes="false" primaryItemName="ewf:content"
+        embeded="false">
+        <supertypes>
+            <supertype>ewf_nt:hierarchyNode</supertype>
+        </supertypes>
+        <propertyDefinition name="ewf:activationParams"
+            requiredType="String" autoCreated="false" mandatory="false"
+            onParentVersion="COPY" protected="false" multiple="false" />
+        <propertyDefinition name="ewf:activationRef"
+            requiredType="Reference" autoCreated="false"
+            mandatory="false" onParentVersion="COPY" protected="false"
+            multiple="false" />
+        <propertyDefinition name="ewf:batch" requiredType="Reference"
+            autoCreated="false" mandatory="false" onParentVersion="COPY"
+            protected="false" multiple="false" />
+        <propertyDefinition name="ewf:docDescription"
+            requiredType="String" autoCreated="false" mandatory="false"
+            onParentVersion="COPY" protected="false" multiple="false" />
+        <propertyDefinition name="ewf:docType" requiredType="String"
+            autoCreated="false" mandatory="false" onParentVersion="COPY"
+            protected="false" multiple="false" />
+        <propertyDefinition name="ewf:numPages" requiredType="Long"
+            autoCreated="false" mandatory="false" onParentVersion="COPY"
+            protected="false" multiple="false" />
+
+        <childNodeDefinition name="*" defaultPrimaryType="ewf_nt:resource"
+            autoCreated="false" mandatory="false" onParentVersion="COPY"
+            protected="false" sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>
+                    ewf_nt:resource
+                </requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+        <childNodeDefinition name="ewf:content" defaultPrimaryType="ewf_nt:resource"
+            autoCreated="false"
+            mandatory="false" onParentVersion="COPY" protected="false"
+            sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>
+                    ewf_nt:resource
+                </requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+        <childNodeDefinition name="ewf:plainText" defaultPrimaryType="ewf_nt:resource"
+            autoCreated="false"
+            mandatory="false" onParentVersion="COPY" protected="false"
+            sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>
+                    ewf_nt:resource
+                </requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+    </nodeType>
+
+    <!-- ewf_nt:resource 
+        A node type that describes a file (as a file in the file system).   
+    -->
+    <nodeType name="ewf_nt:resource" isMixin="false"
+        hasOrderableChildNodes="false" primaryItemName="ewf:data"
+        embeded="false">
+        <supertypes>
+            <supertype>nt:base</supertype>
+            <supertype>ewf_mix:trackable</supertype>
+            <supertype>mix:referenceable</supertype>
+        </supertypes>
+        <propertyDefinition name="ewf:data" requiredType="Binary"
+            autoCreated="false" mandatory="true" onParentVersion="COPY"
+            protected="false" multiple="false" fts="true" />
+        <propertyDefinition name="ewf:encoding" requiredType="String"
+            autoCreated="false" mandatory="false" onParentVersion="COPY"
+            protected="false" multiple="false" />
+        <propertyDefinition name="ewf:fileName" requiredType="String"
+            autoCreated="false" mandatory="false" onParentVersion="COPY"
+            protected="false" multiple="false" />
+        <propertyDefinition name="ewf:mimeType" requiredType="String"
+            autoCreated="false" mandatory="true" onParentVersion="COPY"
+            protected="false" multiple="false" />
+        <propertyDefinition name="ewf:contentDescriptors" requiredType="String"
+            autoCreated="false" mandatory="false" onParentVersion="COPY"
+            protected="false" multiple="true" />
+        <propertyDefinition name="ewf:preferredApplication" requiredType="String"
+            autoCreated="false" mandatory="false" onParentVersion="COPY"
+            protected="false" multiple="false" />
+        <propertyDefinition name="ewf:size" requiredType="Long"
+            autoCreated="true" mandatory="true" onParentVersion="COPY"
+            protected="true" multiple="false"/>
+        <propertyDefinition name="ewf:storageName" requiredType="String"
+            autoCreated="true" mandatory="true" onParentVersion="COPY"
+            protected="true" multiple="false" />
+        <propertyDefinition name="ewf:storageType" requiredType="Long"
+            autoCreated="false" mandatory="false" onParentVersion="COPY"
+            protected="true" multiple="false" >
+            <valueConstraints>
+                <valueConstraint>[0,1]</valueConstraint>
+            </valueConstraints>
+		</propertyDefinition>
+        <propertyDefinition name="ewf:storageLocation"
+            requiredType="String" autoCreated="false" mandatory="false"
+            onParentVersion="COPY" protected="true" multiple="false" />
+    </nodeType>
+
+
+<!-- INTERNAL: specify storage location (for example, db, file or Centera storage) 
+-->
+    
+    <!-- ewf_mix:storeConfiguration
+    	If this mixin is present on node, then specified storage location 
+    	applies to all subsequient children 
+    -->
+    <nodeType name="ewf_mix:storeConfiguration" isMixin="true"
+        hasOrderableChildNodes="false" primaryItemName=""
+        embeded="false">
+        <propertyDefinition name="ewf:storeName" requiredType="String"
+            autoCreated="false" mandatory="true" onParentVersion="COPY"
+            protected="false" multiple="false" />
+        <childNodeDefinition name="ewf:property"
+            defaultPrimaryType="ewf_nt:storeConfigurationProperty"
+            autoCreated="false" mandatory="false" onParentVersion="COPY"
+            protected="true" sameNameSiblings="true">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>
+                    ewf_nt:storeConfigurationProperty
+                </requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+    </nodeType>
+
+	<!-- ewf_nt:storeConfigurationProperty
+		Custom, store specific properties (apply to a node that has storeConfiguration mixin) 
+	-->
+    <nodeType name="ewf_nt:storeConfigurationProperty" isMixin="false"
+        hasOrderableChildNodes="false" primaryItemName=""
+        embeded="false">
+        <supertypes>
+            <supertype>nt:base</supertype>
+        </supertypes>
+        <propertyDefinition name="ewf:name" requiredType="String"
+            autoCreated="false" mandatory="true" onParentVersion="COPY"
+            protected="true" multiple="false" />
+        <propertyDefinition name="ewf:value" requiredType="undefined"
+            autoCreated="false" mandatory="true" onParentVersion="COPY"
+            protected="true" multiple="false" />
+    </nodeType>
+
+
+    <!-- 
+    
+        UI Metadata 
+        
+    -->
+
+
+    <!-- ewf_nt:UIMetadataRoot
+        Root node type for defining UI meta-data.
+        
+        ewf_nt:UIMetadataRoot may have multiple ewf_nt:UITypeMetadata child nodes. 
+        Each child node must have name exactly matching a JCR node type. 
+        By this name UI application retreives metadata when any manipulations on the JCR node type are performed.
+    -->
+    <nodeType name="ewf_nt:UIMetadataRoot" isMixin="false" hasOrderableChildNodes="false"
+        primaryItemName="" >
+        <supertypes>
+            <supertype>nt:base</supertype>
+        </supertypes>
+        <childNodeDefinition name="*" defaultPrimaryType="ewf_nt:UITypeMetadata" autoCreated="false"
+            mandatory="false" onParentVersion="COPY" protected="false" sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>ewf_nt:UITypeMetadata</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+    </nodeType>
+
+    <!-- ewf_nt:UITypeMetadata
+        Meta-data bound to a JCR node type
+    -->
+    <nodeType name="ewf_nt:UITypeMetadata" isMixin="false" hasOrderableChildNodes="false"
+        primaryItemName="" >
+        <supertypes>
+            <supertype>nt:base</supertype>
+        </supertypes>
+        <childNodeDefinition name="*" defaultPrimaryType="ewf_nt:UIPropertyMetadata"
+            autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false"
+            sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>ewf_nt:UIPropertyMetadata</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+        <propertyDefinition name="ewf:nameCreationRule" requiredType="String" autoCreated="false"
+            mandatory="false" onParentVersion="COPY" protected="false" multiple="false"
+            />
+        <propertyDefinition name="ewf:displayName" requiredType="String" autoCreated="false"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false"
+            />
+        <propertyDefinition name="ewf:description" requiredType="String" autoCreated="false"
+            mandatory="false" onParentVersion="COPY" protected="false" multiple="false"
+            />
+        <propertyDefinition name="ewf:hide" requiredType="Boolean" autoCreated="true"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false"
+             >
+             <defaultValues>
+                <defaultValue>false</defaultValue>
+            </defaultValues>
+             
+            </propertyDefinition>
+    </nodeType>
+
+    <!-- ewf_nt:UIPropertyMetadata
+        Meta-data describing property appearance
+    -->
+    <nodeType name="ewf_nt:UIPropertyMetadata" isMixin="false" hasOrderableChildNodes="false"
+        primaryItemName="" >
+        <supertypes>
+            <supertype>nt:base</supertype>
+        </supertypes>
+        <childNodeDefinition name="listDescription" defaultPrimaryType="ewf_nt:UILookupMetadata"
+            autoCreated="false" mandatory="false" onParentVersion="COPY" protected="false"
+            sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>ewf_nt:UILookupMetadata</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+        <propertyDefinition name="ewf:shortName" requiredType="String" autoCreated="false"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false"
+            />
+        <propertyDefinition name="ewf:longName" requiredType="String" autoCreated="false"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false"
+            />
+        <propertyDefinition name="ewf:description" requiredType="String" autoCreated="false"
+            mandatory="false" onParentVersion="COPY" protected="false" multiple="false"
+            />
+        <propertyDefinition name="ewf:orderWeight" requiredType="Long" autoCreated="false"
+            mandatory="false" onParentVersion="COPY" protected="false" multiple="false"
+            />
+        <propertyDefinition name="ewf:readOnly" requiredType="Boolean" autoCreated="false"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false"
+            >
+            <defaultValues>
+                <defaultValue>false</defaultValue>
+            </defaultValues>
+        </propertyDefinition>
+        <propertyDefinition name="ewf:showInTable" requiredType="Boolean" autoCreated="true"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false"
+            >
+            <defaultValues>
+                <defaultValue>true</defaultValue>
+            </defaultValues>
+        </propertyDefinition>
+        <propertyDefinition name="ewf:showInQuery" requiredType="Boolean" autoCreated="true"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false"
+            >
+            <defaultValues>
+                <defaultValue>true</defaultValue>
+            </defaultValues>
+        </propertyDefinition>
+        <propertyDefinition name="ewf:showInEditor" requiredType="Boolean" autoCreated="true"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false"
+            >
+            <defaultValues>
+                <defaultValue>true</defaultValue>
+            </defaultValues>
+        </propertyDefinition>
+        <propertyDefinition name="ewf:mask" requiredType="String" autoCreated="false"
+            mandatory="false" onParentVersion="COPY" protected="false" multiple="false"
+             />
+    </nodeType>
+
+    <!-- ewf_nt:UILookupMetadata
+        Describes how a list is used to show/update the value of the property.
+     -->
+    <nodeType name="ewf_nt:UILookupMetadata" isMixin="false" hasOrderableChildNodes="false"
+        primaryItemName="" >
+        <supertypes>
+            <supertype>nt:base</supertype>
+        </supertypes>
+        <propertyDefinition name="ewf:listNodeWorkspace" requiredType="String" autoCreated="false"
+            mandatory="false" onParentVersion="COPY" protected="false" multiple="false"
+            />
+        <propertyDefinition name="ewf:listNodePath" requiredType="Path" autoCreated="false"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false"
+            />
+        <propertyDefinition name="ewf:displayProperties" requiredType="Name" autoCreated="false"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="true"
+            />
+        <propertyDefinition name="ewf:valueProperty" requiredType="Name" autoCreated="false"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false"
+            />
+        <propertyDefinition name="ewf:controlType" requiredType="String" autoCreated="false"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false"
+            >
+            <valueConstraints>
+                <valueConstraint>COMBOBOX</valueConstraint>
+                <valueConstraint>SEARCH_DIALOG</valueConstraint>
+            </valueConstraints>
+        </propertyDefinition>
+        <propertyDefinition name="ewf:allowAdd" requiredType="Boolean" autoCreated="false"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false"
+            />
+        <propertyDefinition name="ewf:allowEdit" requiredType="Boolean" autoCreated="false"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false"
+            />
+        <propertyDefinition name="ewf:allowDelete" requiredType="Boolean" autoCreated="false"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false"
+            />
+    </nodeType>
+
+<!-- 
+
+    regarding document lists and collections and references:
+
+-->
+
+    <!-- ewf_nt:list    
+        A node type that allows creation of lists (the old EWF term is ‘reference tables’). 
+        Can be extended if more properties for each element are needed.
+        
+        The list type for creating different kinds of lists (e.g. lists of values, lists of document types). 
+        It is important to note that this type has orderable child nodes.
+    -->
+    <nodeType name="ewf_nt:list" isMixin="false" hasOrderableChildNodes="true" primaryItemName=""
+        embeded="false" >
+        <supertypes>
+            <supertype>ewf_nt:hierarchyNode</supertype>
+        </supertypes>
+        <childNodeDefinition name="*" autoCreated="false"
+            mandatory="false" onParentVersion="COPY" protected="false" sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>ewf_nt:listElement</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+    </nodeType>
+
+    <!-- ewf_nt:collection  
+        A node type that is used for collections. Can be extended for specific-purpose collections.
+        
+        The concept itself is meant for creating and maintaining references to repository objects (e.g. folders, documents). 
+        The following are some of collection use cases:
+            * The 'classic' collections that were used for exporting parts of the repository for external use.
+            * Collections for 'parcel' simulation, both for the internal use of the business processes and for 
+              process-user communication.
+            * Collections for different output needs such as printing.
+            
+        Collections essentially consist of a collection header node and its contents: links to repository objects. 
+        The generic collection (header) type can be either used as-is or expanded with additional properties.
+        
+        If necessary, collections can be made hierarchic (one collection can include several other collections).        
+    -->
+    <nodeType name="ewf_nt:collection" isMixin="false" hasOrderableChildNodes="false"
+        primaryItemName="" embeded="false" >
+        <supertypes>
+            <supertype>nt:base</supertype>
+            <supertype>mix:referenceable</supertype>
+            <supertype>ewf_mix:trackable</supertype>
+        </supertypes>
+        <childNodeDefinition name="*" autoCreated="false" mandatory="false"
+            onParentVersion="COPY" protected="false" sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>ewf_nt:collection</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+        <childNodeDefinition name="*"  autoCreated="false" mandatory="false"
+            onParentVersion="COPY" protected="false" sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>ewf_nt:linkedNode</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+        <propertyDefinition name="ewf:description" requiredType="String" autoCreated="false"
+            mandatory="false" onParentVersion="COPY" protected="false" multiple="false" />
+    </nodeType>
+
+    <!-- ewf_nt:linkedNode
+        This node type is 'reference node'; it contains a reference to another node and also 
+        adds the 'trackable' information (who and when created the reference etc.).
+        
+        A node type that is used for collections or reference documents within folders. 
+        Collections consist of links to repository nodes such as documents. 
+        If there is a need for reference documents, the parent folder type should be 
+        allowed to have linkedNode children.
+    -->
+    <nodeType name="ewf_nt:linkedNode" isMixin="false" hasOrderableChildNodes="false"
+        primaryItemName="ewf:node" embeded="false" >
+        <supertypes>
+            <supertype>nt:base</supertype>
+            <supertype>ewf_mix:trackable</supertype>
+        </supertypes>
+        <propertyDefinition name="ewf:node" requiredType="Reference" autoCreated="false"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    </nodeType>
+
+<!-- 
+
+    regarding individual (list,collection) elements:
+
+-->
+
+    <!-- ewf_nt:listElement
+        Base for the elements of ewf_nt:list - elements should use this as node supertype (base).
+    -->
+    <nodeType name="ewf_nt:listElement" isMixin="false" hasOrderableChildNodes="false"
+        primaryItemName="" embeded="false" >
+        <supertypes>
+            <supertype>nt:base</supertype>
+        </supertypes>
+    </nodeType>
+
+    <!-- ewf_nt:simpleListElement
+        A simple value/display name element (String/String).
+    -->
+    <nodeType name="ewf_nt:simpleListElement" isMixin="false" hasOrderableChildNodes="false"
+        primaryItemName="" embeded="false" >
+        <supertypes>
+            <supertype>ewf_nt:listElement</supertype>
+        </supertypes>
+        <propertyDefinition name="ewf:displayText" requiredType="String" autoCreated="false"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+        <propertyDefinition name="ewf:value" requiredType="String" autoCreated="false"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    </nodeType>
+
+    <!-- ewf_nt:doubleListElement
+        A simple value/display name element (Double/String).
+    -->
+    <nodeType name="ewf_nt:doubleListElement" isMixin="false" hasOrderableChildNodes="false"
+        primaryItemName="" embeded="false" >
+        <supertypes>
+            <supertype>ewf_nt:listElement</supertype>
+        </supertypes>
+        <propertyDefinition name="ewf:displayText" requiredType="String" autoCreated="false"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+        <propertyDefinition name="ewf:doubleValue" requiredType="Double" autoCreated="false"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    </nodeType>
+
+    <!-- ewf_nt:longListElement
+        A simple value/display name element (Long/String).
+    -->
+    <!--nodeType name="ewf_nt:longListElement" isMixin="false" hasOrderableChildNodes="false"
+        primaryItemName="" embeded="false" >
+        <supertypes>
+            <supertype>ewf_nt:listElement</supertype>
+        </supertypes>
+        <propertyDefinition name="ewf:displayText" requiredType="String" autoCreated="false"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+        <propertyDefinition name="ewf:value" requiredType="Long" autoCreated="false"
+            mandatory="true" onParentVersion="COPY" protected="false" multiple="false" />
+    </nodeType-->
+
+
+    <!-- TODO: docDetail, template, batch, retentionPolicy 
+    -->
+    
+    <!-- 
+    	This is a 'process folder' type that is intended to contain proces's collections as its children. 
+    	Data contained within is a replica of process instance data; it is useful for issuing queries that combine process and business properties. 
+     -->
+    <nodeType name="ewf_nt:bpmProcess" isMixin="false"
+        hasOrderableChildNodes="false" primaryItemName=""
+        embeded="false">
+        <supertypes>
+            <supertype>ewf_nt:hierarchyNode</supertype>
+        </supertypes>
+        
+        <propertyDefinition 
+        	name="ewf:processName" requiredType="String" 
+        	autoCreated="false" mandatory="true"
+            onParentVersion="COPY" protected="false" multiple="false" />
+        <propertyDefinition 
+        	name="ewf:processVersion" requiredType="Long" 
+        	autoCreated="false" mandatory="true"
+            onParentVersion="COPY" protected="false" multiple="false" />
+        <propertyDefinition 
+        	name="ewf:instanceId" requiredType="Long" 
+        	autoCreated="false" mandatory="true"
+            onParentVersion="COPY" protected="false" multiple="false" />
+        <propertyDefinition 
+        	name="ewf:isActive" requiredType="Boolean" 
+        	autoCreated="false" mandatory="true"
+            onParentVersion="COPY" protected="false" multiple="false" />
+            
+        <propertyDefinition 
+        	name="ewf:folder" requiredType="Reference"
+            autoCreated="false" mandatory="false" onParentVersion="COPY"
+            protected="false" multiple="false" />
+            
+        <propertyDefinition 
+        	name="ewf:started" requiredType="Date"
+            autoCreated="false" mandatory="false" onParentVersion="COPY"
+            protected="false" multiple="false" />
+        <propertyDefinition 
+        	name="ewf:ended" requiredType="Date"
+            autoCreated="false" mandatory="false" onParentVersion="COPY"
+            protected="false" multiple="false" />
+
+        <childNodeDefinition name="*" autoCreated="false" mandatory="false" defaultPrimaryType="ewf_nt:collection"
+            onParentVersion="COPY" protected="false" sameNameSiblings="false">
+            <requiredPrimaryTypes>
+                <requiredPrimaryType>ewf_nt:collection</requiredPrimaryType>
+            </requiredPrimaryTypes>
+        </childNodeDefinition>
+            
+    </nodeType>
+
+
+    <nodeType name="ewf_mix:bpmTrackable" isMixin="true"
+        hasOrderableChildNodes="false" primaryItemName=""
+        embeded="false">
+        
+        <propertyDefinition 
+        	name="ewf:creatorProcess" requiredType="String" 
+        	autoCreated="false" mandatory="false"
+            onParentVersion="COPY" protected="false" multiple="false" />
+
+        <propertyDefinition 
+        	name="ewf:creatorInstance" requiredType="Long" 
+        	autoCreated="false" mandatory="false"
+            onParentVersion="COPY" protected="false" multiple="false" />
+            
+        <propertyDefinition 
+        	name="ewf:creatorState" requiredType="Long" 
+        	autoCreated="false" mandatory="false"
+            onParentVersion="COPY" protected="false" multiple="false" />
+            
+        <propertyDefinition 
+        	name="ewf:creatorTask" requiredType="String" 
+        	autoCreated="false" mandatory="false"
+            onParentVersion="COPY" protected="false" multiple="false" />
+            
+        <propertyDefinition 
+        	name="ewf:creatorTaskID" requiredType="Long" 
+        	autoCreated="false" mandatory="false"
+            onParentVersion="COPY" protected="false" multiple="false" />
+            
+        <propertyDefinition 
+        	name="ewf:updateProcess" requiredType="String" 
+        	autoCreated="false" mandatory="false"
+            onParentVersion="COPY" protected="false" multiple="false" />
+            
+        <propertyDefinition 
+        	name="ewf:updateInstance" requiredType="Long" 
+        	autoCreated="false" mandatory="false"
+            onParentVersion="COPY" protected="false" multiple="false" />
+            
+        <propertyDefinition 
+        	name="ewf:updateState" requiredType="Long" 
+        	autoCreated="false" mandatory="false"
+            onParentVersion="COPY" protected="false" multiple="false" />
+            
+        <propertyDefinition 
+        	name="ewf:updateTask" requiredType="String" 
+        	autoCreated="false" mandatory="false"
+            onParentVersion="COPY" protected="false" multiple="false" />
+            
+        <propertyDefinition 
+        	name="ewf:updateTaskID" requiredType="Long" 
+        	autoCreated="false" mandatory="false"
+            onParentVersion="COPY" protected="false" multiple="false" />
+    </nodeType>
+
+
+
+</nodeTypes>

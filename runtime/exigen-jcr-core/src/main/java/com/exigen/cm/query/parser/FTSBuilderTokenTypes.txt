@@ -1,0 +1,8 @@
+// $ANTLR 2.7.4: fts.g -> FTSBuilderTokenTypes.txt$
+FTSBuilder    // output token vocab name
+OR="or"=4
+NOT=5
+AND=6
+MINUS=7
+PHRASE=8
+WORD=9

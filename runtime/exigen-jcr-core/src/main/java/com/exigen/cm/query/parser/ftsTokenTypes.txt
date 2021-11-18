@@ -1,0 +1,11 @@
+// $ANTLR 2.7.4: fts.g -> ftsTokenTypes.txt$
+fts    // output token vocab name
+OR="or"=4
+NOT=5
+AND=6
+MINUS=7
+PHRASE=8
+WORD=9
+PARENTESS=10
+ESCAPE=11
+WS=12

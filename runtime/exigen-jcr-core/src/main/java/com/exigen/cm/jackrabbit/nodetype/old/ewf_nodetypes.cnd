@@ -1,0 +1,363 @@
+<nt='http://www.jcp.org/jcr/nt/1.0'>
+<mix='http://www.jcp.org/jcr/mix/1.0'>
+<jcr='http://www.jcp.org/jcr/1.0'>
+<sv='http://www.jcp.org/jcr/sv/1.0'>
+<test='http://www.apache.org/jackrabbit/test'>
+<ewf_nt='http://www.exigen.com/jcr/nt'>
+<ewf_mix='http://www.exigen.com/jcr/mix'>
+<ewf='http://www.exigen.com/jcr'>
+
+//------------------------------------------------------------------------------
+// Exigen Workflow extensions: nodetypes to implement EWF requirements
+//------------------------------------------------------------------------------
+
+/* ewf_mix:trackable	
+  A mixin type that makes a node `trackable': shows who and when created it, who and when modified it.*/
+[ewf_mix:trackable] mixin
+  - ewf:created (date) autocreated mandatory COPY protected 
+  - ewf:createdBy (string) autocreated mandatory COPY protected
+  - ewf:updated (date) autocreated mandatory COPY protected
+  - ewf:updatedBy (string) autocreated mandatory COPY protected
+
+/* ewf_mix:unlockable	
+	A mixin type that adds a lock time property, allows time-based unlocking.*/
+[ewf_mix:unlockable]
+  mixin
+  - ewf:lockTime (date) protected indexable 
+
+/* TODO: ewf_mix:archivable	
+	A mixin type that adds life-cycle and retention specific properties.*/
+
+/* ewf_nt:hierarchyNode
+	The generic type for creating specific business folder and document types.*/
+[ewf_nt:hierarchyNode] > nt:base , mix:referenceable , ewf_mix:trackable
+
+/* ewf_nt:folder	
+	A node type that should be used as a base for custom folder creation.*/
+[ewf_nt:folder] > ewf_nt:hierarchyNode
+ + * (ewf_nt:hierarchyNode) = ewf_nt:hierarchyNode COPY
+
+/* ewf_nt:document	
+	A node type that should be used as a base for custom document creation. 
+	If a document does not add any properties, can be used as-is.*/
+[ewf_nt:document] > ewf_nt:hierarchyNode
+  - ewf:activationParams (string) COPY
+  - ewf:activationRef (reference) COPY 
+  - ewf:batch (reference) COPY
+  - ewf:docDescription (string) COPY
+  - ewf:docType (string) COPY
+  - ewf:numPages (long) COPY
+  + * (ewf_nt:resource) = ewf_nt:resource COPY 
+  + ewf:content (ewf_nt:resource) = ewf_nt:resource COPY primary
+  + ewf:plainText (ewf_nt:resource) = ewf_nt:resource COPY 
+
+/* ewf_nt:resource 
+	A node type that describes a file (as a file in the file system).   */
+[ewf_nt:resource] > nt:base , ewf_mix:trackable , mix:referenceable
+  - ewf:data (binary) mandatory COPY fts primary
+  - ewf:encoding (string) COPY
+  - ewf:fileName (string) COPY
+  - ewf:mimeType (string) mandatory COPY
+  - ewf:contentDescriptors (string) COPY multiple
+  - ewf:preferredApplication (string) COPY
+  - ewf:size (long) autocreated mandatory COPY protected
+  - ewf:storageName (string) autocreated mandatory COPY protected
+  - ewf:storageType (long) COPY protected < '[0,1]'
+  - ewf:storageLocation (string)  COPY protected  
+
+// INTERNAL: specify storage location (for example, db, file or Centera storage) 
+    
+/* ewf_mix:storeConfiguration
+    	If this mixin is present on node, then specified storage location 
+    	applies to all subsequient children */
+[ewf_mix:storeConfiguration] mixin
+  - ewf:storeName (string) mandatory COPY
+  + ewf:property (ewf_nt:storeConfigurationProperty) = ewf_nt:storeConfigurationProperty COPY protected multiple
+
+/* ewf_nt:storeConfigurationProperty
+	Custom, store specific properties (apply to a node that has storeConfiguration mixin) */
+[ewf_nt:storeConfigurationProperty] > nt:base
+  - ewf:name (string) mandatory COPY protected
+  - ewf:value (undefined) mandatory COPY protected
+
+
+//------------------------------------------------------------------------------
+// UI Metadata 
+//------------------------------------------------------------------------------
+
+/* ewf_nt:UIMetadataRoot
+	Root node type for defining UI meta-data.
+
+	ewf_nt:UIMetadataRoot may have multiple ewf_nt:UITypeMetadata child nodes. 
+	Each child node must have name exactly matching a JCR node type. 
+	By this name UI application retreives metadata when any manipulations on the JCR node type are performed.*/
+[ewf_nt:UIMetadataRoot] > nt:base
+  + * (ewf_nt:UITypeMetadata) = ewf_nt:UITypeMetadata COPY  
+
+/* ewf_nt:UITypeMetadata
+  Meta-data bound to a JCR node type*/
+[ewf_nt:UITypeMetadata] > nt:base
+  + * (ewf_nt:UIPropertyMetadata) = ewf_nt:UIPropertyMetadata COPY 
+  - ewf:nameCreationRule (string) COPY
+  - ewf:displayName (string) mandatory COPY
+  - ewf:description (string) COPY
+  - ewf:hide (boolean) = 'false' autocreated mandatory COPY 
+
+/* ewf_nt:UIPropertyMetadata
+  Meta-data describing property appearance*/
+[ewf_nt:UIPropertyMetadata] > nt:base
+  + ewf:listDescription (ewf_nt:UILookupMetadata) = ewf_nt:UILookupMetadata COPY 
+  - ewf:shortName (string) mandatory COPY  
+  - ewf:longName (string) mandatory COPY
+  - ewf:description (string) COPY
+  - ewf:orderWeight (long) COPY
+  - ewf:readOnly (boolean) = 'false' mandatory COPY 
+  - ewf:showInTable (boolean) = 'true' autocreated mandatory COPY 
+  - ewf:showInQuery (boolean) = 'true' autocreated mandatory COPY  
+  - ewf:showInEditor (boolean) = 'true' autocreated mandatory COPY 
+  - ewf:mask (string) COPY
+
+/* ewf_nt:UILookupMetadata
+  Describes how a list is used to show/update the value of the property.*/
+[ewf_nt:UILookupMetadata] > nt:base
+  - ewf:listNodeWorkspace (string) COPY
+  - ewf:listNodePath (path)  mandatory COPY
+  - ewf:displayProperties (name) mandatory COPY  multiple
+  - ewf:valueProperty (name) mandatory COPY
+  - ewf:controlType (string) mandatory COPY < 'COMBOBOX' , 'SEARCH_DIALOG'
+  - ewf:allowAdd (boolean) mandatory COPY
+  - ewf:allowEdit (boolean) mandatory COPY  
+  - ewf:allowDelete (boolean) mandatory COPY
+
+//------------------------------------------------------------------------------
+// regarding document lists and collections and references:
+//------------------------------------------------------------------------------
+
+/* ewf_nt:list    
+	A node type that allows creation of lists (the old EWF term is ‘reference tables’). 
+	Can be extended if more properties for each element are needed.
+
+	The list type for creating different kinds of lists (e.g. lists of values, lists of document types). 
+	It is important to note that this type has orderable child nodes.*/
+[ewf_nt:list] > ewf_nt:hierarchyNode 
+  orderable 
+  + * (ewf_nt:listElement) COPY
+
+/* ewf_nt:collection  
+	A node type that is used for collections. Can be extended for specific-purpose collections.
+
+	The concept itself is meant for creating and maintaining references to repository objects (e.g. folders, documents). 
+	The following are some of collection use cases:
+	    * The 'classic' collections that were used for exporting parts of the repository for external use.
+	    * Collections for 'parcel' simulation, both for the internal use of the business processes and for 
+    	  process-user communication.
+	    * Collections for different output needs such as printing.
+    
+	Collections essentially consist of a collection header node and its contents: links to repository objects. 
+	The generic collection (header) type can be either used as-is or expanded with additional properties.
+
+	If necessary, collections can be made hierarchic (one collection can include several other collections).*/
+[ewf_nt:collection] > nt:base,  mix:referenceable,  ewf_mix:trackable
+  + * (ewf_nt:collection) COPY
+  + * (ewf_nt:linkedNode) COPY 
+  - ewf:description (string) COPY 
+
+/* ewf_nt:linkedNode
+	This node type is 'reference node'; it contains a reference to another node and also 
+	adds the 'trackable' information (who and when created the reference etc.).
+
+	A node type that is used for collections or reference documents within folders. 
+	Collections consist of links to repository nodes such as documents. 
+	If there is a need for reference documents, the parent folder type should be 
+	allowed to have linkedNode children.*/
+[ewf_nt:linkedNode] > nt:base, ewf_mix:trackable
+  - ewf:node (reference) mandatory COPY primary
+
+//------------------------------------------------------------------------------
+// regarding individual (list,collection) elements:
+//------------------------------------------------------------------------------
+
+/* ewf_nt:listElement
+	Base for the elements of ewf_nt:list   - elements should use this as node supertype (base).*/
+[ewf_nt:listElement] > nt:base
+
+/* ewf_nt:simpleListElement
+	A simple value/display name element (String/String).*/
+[ewf_nt:simpleListElement] > ewf_nt:listElement
+  - ewf:displayText (string) mandatory COPY 
+  - ewf:value (string) mandatory COPY
+
+/* ewf_nt:doubleListElement
+	A simple value/display name element (Double/String).*/
+[ewf_nt:doubleListElement] > ewf_nt:listElement
+  - ewf:displayText (string) mandatory COPY
+  - ewf:doubleValue (double) mandatory COPY 
+
+// ewf_nt:longListElement
+//  A simple value/display name element (Long/String).
+//    <!--nodeType name="ewf_nt:longListElement"  
+//  >
+//<supertypes>
+//    <supertype>ewf_nt:listElement</supertype>
+//</supertypes>
+//  - ewf:displayText" (string) 
+//    mandatory COPY   />
+//  - ewf:value" (long) 
+//    mandatory COPY   />
+//    </nodeType-->
+
+
+// TODO: docDetail, template, batch, retentionPolicy 
+ 
+/*    	This is a 'process folder' type that is intended to contain proces's collections as its children. 
+    	Data contained within is a replica of process instance data; it is useful for issuing queries that combine process and business properties. */
+[ewf_nt:bpmProcess] > ewf_nt:hierarchyNode
+  - ewf:processName (string) mandatory COPY 
+  - ewf:processVersion (long) mandatory COPY
+  - ewf:instanceId (long) mandatory COPY
+  - ewf:isActive (boolean) mandatory COPY
+  - ewf:folder (reference) COPY
+  - ewf:started (date) COPY
+  - ewf:ended (date) COPY
+  + * (ewf_nt:collection) = ewf_nt:collection COPY 
+
+
+/*
+		This mixin is meant for process-related tracking of documents and, if necessary, folders. This mixin may be 
+		usable when the repository is used as BPM-driven records management system and the process logic involves 
+		queries such as: 'show me documents created by the previous task' etc.
+		Suggested use is together with the regular mix:trackable. In this way we record the 'when' properties in trackable 
+		and 'process-where' properties in bpmTrackabl
+*/
+[ewf_mix:bpmTrackable] mixin
+  - ewf:creatorProcess (string) COPY 
+  - ewf:creatorInstance (long) COPY
+  - ewf:creatorState (long)  COPY
+  - ewf:creatorTask (string) COPY
+  - ewf:creatorTaskID (long) COPY
+  - ewf:updateProcess (string) COPY
+  - ewf:updateInstance (long) COPY
+  - ewf:updateState (long) COPY
+  - ewf:updateTask (string) COPY
+  - ewf:updateTaskID (long) COPY
+  
+  
+[ewf_nt:batch] > ewf_nt:hierarchyNode
+  - ewf:received (date) COPY
+  - ewf:captured (date) mandatory COPY
+  - ewf:workstation (string) mandatory COPY
+  - ewf:application (string) COPY
+  - ewf:numericId (long) COPY
+  + * (ewf_nt:document) = ewf_nt:document COPY
+  
+[ewf_nt:scanBatch] > ewf_nt:batch
+  - ewf:device (string) mandatory COPY
+  - ewf:archiveId (string) COPY
+  - ewf:notes (string) COPY
+  
+[ewf_nt:mailBatch] > ewf_nt:batch
+  - ewf:mailbox (string) mandatory COPY
+  - ewf:mailId (string) COPY
+  - ewf:from (string) COPY
+  - ewf:to (string) COPY
+  - ewf:subject (string) COPY
+  - ewf:mailDate (date) COPY
+  
+[ewf_nt:fileBatch] > ewf_nt:batch
+  - ewf:filePath (string) COPY
+  - ewf:fileName (string) COPY
+  
+[ewf_nt:importBatch] > ewf_nt:batch
+  - ewf:importFileName (string) mandatory COPY
+  
+[ewf_nt:faxBatch] > ewf_nt:batch
+  - ewf:faxId (string) mandatory COPY
+  - ewf:receivedFrom (string) mandatory COPY
+  
+  
+[ewf_nt:batchFolder] > ewf_nt:hierarchyNode
+  + * (ewf_nt:batchFolder) = ewf_nt:batchFolder COPY
+  + * (ewf_nt:batch) = ewf_nt:batch COPY
+  
+
+  
+  
+  
+[ewf_nt:PropertyMetadata] > ewf_nt:hierarchyNode
+  - ewf:labelKey (string) COPY
+  - ewf:displayPattern (string) COPY
+  - ewf:alignment (string) = 'LEFT' COPY < 'LEFT', 'RIGHT', 'CENTER'
+  - ewf:isEditable (boolean) = 'true' autocreated mandatory COPY
+  - ewf:isNullable (boolean) = 'true' autocreated mandatory COPY
+  - ewf:visibilityCategory (long) = '20' COPY 
+	/* MAJOR=10, REGULAR=20, AUXILIARY=30, ADMINISTRATIVE=40, SYSTEM=50 
+	note that we are intentionally using numbers here to allow more categories and single threshold-based filtering */
+  - ewf:uiSuitability (string) COPY multiple /* So far we use values 'QUERY', 'EDITOR', 'TABLE' but more can be added */
+  - ewf:orderWeight (long) = '9999' COPY
+  - ewf:choiceConfiguration (path) COPY
+  - ewf:lookupConfiguration (path) COPY 
+  - ewf:validationConfiguration (path) COPY 
+  
+[ewf_nt:DateMetadata] > ewf_nt:PropertyMetadata
+  - ewf:dateFormat (string) = 'GENERAL' COPY < 'GENERAL', 'LONG_DATE', 'MEDIUM_DATE', 'SHORT_DATE', 'LONG_TIME', 'MEDIUM_TIME', 'SHORT_TIME'
+  
+[ewf_nt:NumberMetadata] > ewf_nt:PropertyMetadata
+  - ewf:valueType (string) = 'LONG' mandatory < 'SHORT', 'INTEGER', 'LONG', 'BIG_INTEGER', 'BIG_DECIMAL', 'FLOAT', 'DOUBLE' 
+  
+[ewf_nt:StringMetadata] > ewf_nt:PropertyMetadata
+  - ewf:length (long) = '254' COPY
+  - ewf:inputMask (string) COPY   
+  
+[ewf_nt:DomainObjectMetadata] > ewf_nt:hierarchyNode
+  - ewf:labelKey (string) COPY
+  - ewf:nameCreationRule (string) COPY
+  + * (ewf_nt:PropertyMetadata) = ewf_nt:PropertyMetadata COPY
+  
+[ewf_nt:MetadataStore] > ewf_nt:hierarchyNode
+  + * (ewf_nt:MetadataStore) = ewf_nt:MetadataStore COPY
+  + * (ewf_nt:DomainObjectMetadata) = ewf_nt:DomainObjectMetadata COPY
+  
+[ewf_nt:Translation] >  ewf_nt:hierarchyNode
+  - ewf:key (string) mandatory COPY
+  - ewf:language (string) mandatory COPY
+  
+[ewf_nt:StringTranslation] > ewf_nt:Translation
+  - ewf:translation (string) mandatory COPY
+  
+[ewf_nt:LabelTranslation] > ewf_nt:Translation
+  - ewf:regularTranslation (string) mandatory COPY
+  - ewf:shortTranslation (string) COPY
+  - ewf:tooltipTranslation (string) COPY
+  
+[ewf_nt:LanguageDictionary] > ewf_nt:hierarchyNode
+  + * (ewf_nt:Translation)  COPY 
+  
+[ewf_nt:InternationalDictionary] > ewf_nt:hierarchyNode
+  + * (ewf_nt:LanguageDictionary)  COPY 
+
+
+[ewf_nt:ChoiceProvider] > ewf_nt:hierarchyNode
+  - ewf:choiceProviderClass (string) mandatory
+  - ewf:choiceDisplayType (string)  = 'COMBO' < 'COMBO', 'RADIO'
+  - ewf:choiceEditable (string) = 'false'
+  - ewf:typeAheadProviderClass (string) 
+  - * (undefined) multiple
+  - * (undefined)
+
+[ewf_nt:LookupProvider] > ewf_nt:hierarchyNode
+  - ewf:lookupProviderClass (string) mandatory
+   - * (undefined) multiple
+   - * (undefined)
+   
+[ewf_nt:ValidationProvider] > ewf_nt:hierarchyNode
+  - ewf:validationProviderClass (string) mandatory
+   - * (undefined) multiple
+   - * (undefined)
+   
+[ewf_nt:ProviderLibrary] > ewf_nt:hierarchyNode
+  + * (ewf_nt:ChoiceProvider)  = ewf_nt:ChoiceProvider COPY 
+  + * (ewf_nt:LookupProvider)  = ewf_nt:LookupProvider COPY 
+  + * (ewf_nt:ValidationProvider)  = ewf_nt:ValidationProvider COPY 
+  
+        
+    

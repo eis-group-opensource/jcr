@@ -1,0 +1,266 @@
+<'ecr_mix'='http://www.exigen.com/ecr_mix'>
+<'ecr'='http://www.exigen.com/ecr'>
+<'ecr_nt'='http://www.exigen.com/ecr_nt'>
+<'mix'='http://www.jcp.org/jcr/mix/1.0'>
+<'nt'='http://www.jcp.org/jcr/nt/1.0'>
+
+[ecr_mix:trackable] mixin (CM_TYPE_ECR_TRACKABLE)
+- ecr:createdBy (string) autocreated mandatory COPY protected  
+- ecr:updated (date) autocreated mandatory COPY protected  
+- ecr:updatedBy (string) autocreated mandatory COPY protected
+
+[ecr_nt:hierarchyNode] > ecr_mix:trackable, mix:referenceable, nt:hierarchyNode
+
+[ecr_nt:PropertyMetadata] > ecr_nt:hierarchyNode, nt:base
+  - ecr:validationConfiguration (path)
+  - ecr:lookupConfiguration (path)
+  - ecr:choiceConfiguration (path)
+  - ecr:orderWeight (long)
+  - ecr:uiSuitability (string) multiple
+    < 'QUERY', 'EDITOR', 'TABLE', '.*'
+  - ecr:visibilityCategory (long)
+  - ecr:isNullable (boolean) mandatory
+  - ecr:isEditable (boolean) mandatory
+  - ecr:alignment (string)
+    < 'LEFT', 'RIGHT', 'CENTER'
+  - ecr:displayPattern (string)
+  - ecr:labelKey (string)
+
+[ecr_nt:DateMetadata] > ecr_nt:PropertyMetadata
+  - ecr:dateFormat (string)
+    < 'GENERAL', 'LONG_DATE', 'MEDIUM_DATE', 'SHORT_DATE', 'LONG_TIME', 'MEDIUM_TIME', 'SHORT_TIME'
+
+[ecr_nt:NumberMetadata] > ecr_nt:PropertyMetadata
+  - ecr:valueType (string) mandatory
+    < 'SHORT', 'INTEGER', 'LONG', 'BIG_INTEGER', 'BIG_DECIMAL', 'FLOAT', 'DOUBLE'
+
+[ecr_nt:StringMetadata] > ecr_nt:PropertyMetadata
+  - ecr:inputMask (string)
+  - ecr:length (long) = '254'
+
+[ecr_nt:DomainObjectMetadata] > ecr_nt:hierarchyNode
+  - ecr:visibilityCategory (long)
+  - ecr:iconName (string)
+  - ecr:nameCreationRule (string)
+  - ecr:labelKey (string)
+  - ecr:uiSuitability (string) multiple  COPY < 'QUERY', '.*'
+  + * (ecr_nt:PropertyMetadata) = ecr_nt:PropertyMetadata
+
+[ecr_nt:MetadataStore] > ecr_nt:hierarchyNode
+  + * (ecr_nt:DomainObjectMetadata) = ecr_nt:DomainObjectMetadata
+  + * (ecr_nt:MetadataStore) = ecr_nt:MetadataStore
+
+[ecr_nt:Translation] > ecr_nt:hierarchyNode
+  - ecr:translation (string) mandatory
+
+[ecr_nt:LabelTranslation] > ecr_nt:Translation
+  - ecr:tooltipTranslation (string)
+  - ecr:shortTranslation (string)
+
+[ecr_nt:LanguageDictionary] > ecr_nt:hierarchyNode
+  + * (ecr_nt:Translation) = ecr_nt:Translation
+
+[ecr_nt:InternationalDictionary] > ecr_nt:hierarchyNode
+  + * (ecr_nt:LanguageDictionary) = ecr_nt:LanguageDictionary
+
+
+[ecr_nt:LookupProvider] > ecr_nt:hierarchyNode
+  - * (undefined)
+  - * (undefined) multiple
+  - ecr:lookupIconName (string)
+  - ecr:lookupProviderClass (string) mandatory
+
+[ecr_nt:ValidationProvider] > ecr_nt:hierarchyNode
+  - * (undefined)
+  - * (undefined) multiple
+  - ecr:validationProviderClass (string) mandatory
+
+[ecr_nt:ProviderLibrary] > ecr_nt:hierarchyNode
+  + * (ecr_nt:ValidationProvider) = ecr_nt:ValidationProvider
+  + * (ecr_nt:LookupProvider) = ecr_nt:LookupProvider
+  + * (ecr_nt:ChoiceProvider) = ecr_nt:ChoiceProvider
+
+[ecr_mix:trackCreation] mixin (CM_TYPE_ECR_TRACKABLE)
+- ecr:created (date) autocreated mandatory COPY protected
+
+[ecr_mix:resourceExt] mixin
+  - ecr:fileName (string) COPY
+  - ecr:contentDescriptors (string) COPY multiple
+  - ecr:preferredApplication (string) COPY
+  - ecr:size (long) autocreated mandatory COPY protected
+  - ecr:storageName (string) autocreated mandatory COPY protected
+  - ecr:storageType (long) COPY protected < '[0,1]'
+  - ecr:storageLocation (string)  COPY protected
+
+[ecr_mix:documentExt]
+  mixin
+  - ecr:numPages (long) COPY
+  - ecr:docType (string) COPY
+  - ecr:docDescription (string) COPY
+  - ecr:batch (reference)  COPY
+  - ecr:activationRef (reference)  COPY
+  - ecr:activationParams (string)  COPY
+  + * (nt:base) = nt:file COPY
+
+[ecr_nt:resource] > ecr_mix:resourceExt, ecr_mix:trackCreation, ecr_mix:trackable, nt:resource
+
+[ecr_nt:document] > ecr_mix:documentExt, ecr_mix:trackable, mix:referenceable, nt:file
+
+[ecr_nt:listElement] > nt:base
+
+[ecr_nt:list] > ecr_nt:hierarchyNode
+  + * (ecr_nt:listElement) = ecr_nt:listElement
+
+[ecr_nt:folder] > ecr_mix:trackable, mix:referenceable, nt:folder
+
+[ecr_mix:archivable] > ecr_mix:trackable
+  mixin
+    - ecr:isCutOff (boolean) = 'false' mandatory COPY
+  	- ecr:cutOff (date) COPY
+	- ecr:isCommitted (boolean) = 'false' mandatory COPY
+	- ecr:committed (date) COPY
+	- ecr:expires (date) COPY
+	- ecr:isFrozen (boolean) = 'false' mandatory COPY
+	- ecr:retentionPolicy (reference) COPY
+  
+  
+[ecr_mix:bpmTrackable]
+  mixin
+  	- ecr:creatorProcess (string) COPY
+  	- ecr:creatorInstance (long) COPY
+  	- ecr:creatorState (long) COPY
+  	- ecr:creatorTask (string) COPY
+  	- ecr:creatorTaskID (long) COPY
+  	- ecr:updateProcess (string) COPY
+  	- ecr:updateInstance (long) COPY
+  	- ecr:updateState (long) COPY
+  	- ecr:updateTask (string) COPY
+  	- ecr:updateTaskID (long) COPY
+  	
+[ecr_mix:storeConfiguration] 
+  mixin
+    - ecr:storeName (string) mandatory 
+    + ecr:property (ecr_nt:storeConfigurationProperty) = ecr_nt:storeConfigurationProperty protected multiple COPY
+    
+/* ecr_nt:storeConfigurationProperty
+	Custom, store specific properties (apply to a node that has storeConfiguration mixin) */
+[ecr_nt:storeConfigurationProperty] > nt:base
+  - ecr:name (string) mandatory COPY protected
+  - ecr:value (undefined) mandatory COPY protected
+    
+    
+[ecr_mix:lockable] mixin
+  - ecr:lockTime (date) protected COPY
+    
+[ecr_mix:unlockable] mixin
+  - ecr:unlockTime (date) COPY
+    
+[ecr_nt:batch] > ecr_nt:hierarchyNode
+  - ecr:received (date) COPY
+  - ecr:captured (date) mandatory COPY
+  - ecr:workstation (string) mandatory COPY
+  - ecr:application (string) COPY
+  - ecr:numericId (long) COPY
+  + * (ecr_nt:document) = ecr_nt:document COPY
+
+[ecr_nt:batchFolder] > ecr_nt:hierarchyNode
+  + * (ecr_nt:batchFolder) = ecr_nt:batchFolder COPY
+  + * (ecr_nt:batch) = ecr_nt:batch COPY
+  
+[ecr_nt:bpmProcess] > ecr_nt:hierarchyNode
+  - ecr:processName (string) mandatory COPY 
+  - ecr:processVersion (long) mandatory COPY
+  - ecr:instanceId (long) mandatory COPY
+  - ecr:isActive (boolean) mandatory COPY
+  - ecr:folder (reference) COPY
+  - ecr:started (date) COPY
+  - ecr:ended (date) COPY
+  + * (ecr_nt:collection) = ecr_nt:collection COPY 
+
+[ecr_nt:ChoiceProvider] > ecr_nt:hierarchyNode
+  - ecr:choiceProviderClass (string) mandatory
+  - ecr:choiceDisplayType (string)  = 'COMBO' < 'COMBO', 'RADIO'
+  - ecr:choiceEditable (boolean) = 'false'
+  - ecr:typeAheadProviderClass (string) 
+  - * (undefined) multiple
+  - * (undefined)
+  
+/* ecr_nt:collection  
+	A node type that is used for collections. Can be extended for specific-purpose collections.
+
+	The concept itself is meant for creating and maintaining references to repository objects (e.g. folders, documents). 
+	The following are some of collection use cases:
+	    * The 'classic' collections that were used for exporting parts of the repository for external use.
+	    * Collections for 'parcel' simulation, both for the internal use of the business processes and for 
+    	  process-user communication.
+	    * Collections for different output needs such as printing.
+    
+	Collections essentially consist of a collection header node and its contents: links to repository objects. 
+	The generic collection (header) type can be either used as-is or expanded with additional properties.
+
+	If necessary, collections can be made hierarchic (one collection can include several other collections).*/
+[ecr_nt:collection] > nt:base,  mix:referenceable,  ecr_mix:trackable
+  + * (ecr_nt:collection) COPY
+  + * (ecr_nt:linkedNode) COPY 
+  - ecr:description (string) COPY 
+  
+
+[ecr_nt:docDetail] > ecr_nt:hierarchyNode, ecr_mix:trackable
+
+/* ecr_nt:simpleListElement
+	A simple value/display name element (String/String).*/
+[ecr_nt:simpleListElement] > ecr_nt:listElement
+  - ecr:displayText (string) mandatory COPY 
+  - ecr:value (string) mandatory COPY
+
+/* ecr_nt:doubleListElement
+	A simple value/display name element (Double/String).*/
+[ecr_nt:doubleListElement] > ecr_nt:listElement
+  - ecr:displayText (string) mandatory COPY
+  - ecr:doubleValue (double) mandatory COPY 
+
+[ecr_nt:scanBatch] > ecr_nt:batch
+  - ecr:device (string) mandatory COPY
+  - ecr:archiveId (string) COPY
+  - ecr:notes (string) COPY
+  
+[ecr_nt:mailBatch] > ecr_nt:batch
+  - ecr:mailbox (string) mandatory COPY
+  - ecr:mailId (string) COPY
+  - ecr:from (string) COPY
+  - ecr:to (string) COPY
+  - ecr:subject (string) COPY
+  - ecr:mailDate (date) COPY
+  
+[ecr_nt:fileBatch] > ecr_nt:batch
+  - ecr:filePath (string) COPY
+  - ecr:fileName (string) COPY
+  
+[ecr_nt:importBatch] > ecr_nt:batch
+  - ecr:importFileName (string) mandatory COPY
+  
+[ecr_nt:faxBatch] > ecr_nt:batch
+  - ecr:faxId (string) mandatory COPY
+  - ecr:receivedFrom (string) mandatory COPY
+  
+/* ecr_nt:linkedNode
+	This node type is 'reference node'; it contains a reference to another node and also 
+	adds the 'trackable' information (who and when created the reference etc.).
+
+	A node type that is used for collections or reference documents within folders. 
+	Collections consist of links to repository nodes such as documents. 
+	If there is a need for reference documents, the parent folder type should be 
+	allowed to have linkedNode children.*/
+[ecr_nt:linkedNode] > nt:base, ecr_mix:trackable, ecr_mix:trackCreation
+  - ecr:node (reference) mandatory COPY primary
+  
+[ecr_mix:ocr_resource] mixin
+- ecr:ocr_binaryPropertyName (string) = 'jcr:data' autocreated mandatory COPY 
+- ecr:ocr_processFTS (boolean) = true autocreated mandatory COPY 
+- ecr:ocr_completedDate (date) COPY protected
+- ecr:ocr_completed (boolean) = false COPY protected
+- ecr:ocr_failed (boolean) = false COPY protected
+- ecr:ocr_content (binary)COPY protected
+- ecr:ocr_content_mimeType (string)COPY protected
+- ecr:ocr_workId (Long) COPY protected
+- ecr:ocr_userId (string) autocreated COPY protected  
